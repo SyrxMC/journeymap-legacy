@@ -39,8 +39,7 @@ import java.util.Map;
  * Coming soon to a codebase near you.
  */
 @SideOnly(Side.SERVER)
-public class JourneymapServer implements CommonProxy
-{
+public class JourneymapServer implements CommonProxy {
     public static String WORLD_NAME;
 
     private Logger logger;
@@ -48,18 +47,15 @@ public class JourneymapServer implements CommonProxy
     /**
      * Constructor.
      */
-    public JourneymapServer()
-    {
+    public JourneymapServer() {
         logger = Journeymap.getLogger();
     }
 
-    public static String getWorldName()
-    {
+    public static String getWorldName() {
         return WORLD_NAME;
     }
 
-    public static void setWorldName(String worldName)
-    {
+    public static void setWorldName(String worldName) {
         WORLD_NAME = worldName;
     }
 
@@ -70,11 +66,18 @@ public class JourneymapServer implements CommonProxy
      */
     @SideOnly(Side.SERVER)
     @Override
-    public void initialize(FMLInitializationEvent event)
-    {
+    public void initialize(FMLInitializationEvent event) {
 //        PacketHandler packetHandler = new PacketHandler();
 //        packetHandler.init(Side.SERVER);
         Controller.setController(Controller.FORGE);
+
+        try {
+            Class.forName("org.bukkit.DyeColor");
+            logger.info("Bukkit Detected... Setting the controller to BUKKIT");
+            Controller.setController(Controller.BUKKIT);
+        } catch (ClassNotFoundException ignored) {
+        }
+
         MinecraftForge.EVENT_BUS.register(new ForgeEvents());
         //FMLCommonHandler.instance().bus().register(new FMLEvents());
         PacketManager.init(new ForgePacketHandler());
@@ -89,8 +92,7 @@ public class JourneymapServer implements CommonProxy
      */
     @SideOnly(Side.SERVER)
     @Override
-    public void postInitialize(FMLPostInitializationEvent event)
-    {
+    public void postInitialize(FMLPostInitializationEvent event) {
 
     }
 
@@ -102,13 +104,9 @@ public class JourneymapServer implements CommonProxy
      * @return
      */
     @Override
-    public boolean checkModLists(Map<String, String> modList, Side side)
-    {
+    public boolean checkModLists(Map<String, String> modList, Side side) {
 
-        logger.info(side.toString());
-
-        for (String s : modList.keySet())
-        {
+        for (String s : modList.keySet()) {
             //logger.info("MOD Key: " + s + " MOD Value: " + modList.get(s));
         }
         // TODO: Check for JM client and enable/disable worldid checking, etc.
@@ -121,15 +119,13 @@ public class JourneymapServer implements CommonProxy
      * @return
      */
     @Override
-    public boolean isUpdateCheckEnabled()
-    {
+    public boolean isUpdateCheckEnabled() {
         // TODO: Make this configurable
         return false;
     }
 
     @Override
-    public void handleWorldIdMessage(String message, EntityPlayerMP playerEntity)
-    {
+    public void handleWorldIdMessage(String message, EntityPlayerMP playerEntity) {
         WorldNbtIDSaveHandler nbt = new WorldNbtIDSaveHandler();
         PacketHandler.sendPlayerWorldID(nbt.getWorldID(), playerEntity);
     }
