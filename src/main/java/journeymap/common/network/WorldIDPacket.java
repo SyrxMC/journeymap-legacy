@@ -15,73 +15,63 @@ import io.netty.buffer.ByteBuf;
 import journeymap.common.Journeymap;
 import journeymap.server.oldservercode.config.ConfigHandler;
 import net.minecraft.entity.player.EntityPlayerMP;
+
+import java.nio.charset.StandardCharsets;
 // 1.8
 
 /**
  * Created by Mysticdrew on 10/8/2014.
  */
-public class WorldIDPacket implements IMessage
-{
+public class WorldIDPacket implements IMessage {
     // Channel name
-    public static final String CHANNEL_NAME = "world_info";
+    public static final String CHANNEL_NAME = "jm:world_info";
 
     private String worldID;
 
-    public WorldIDPacket()
-    {
+    public WorldIDPacket() {
     }
 
-    public WorldIDPacket(String worldID)
-    {
+    public WorldIDPacket(String worldID) {
         this.worldID = worldID;
     }
 
-    public String getWorldID()
-    {
+    public String getWorldID() {
         return worldID;
     }
 
     @Override
-    public void fromBytes(ByteBuf buf)
-    {
-        try
-        {
-            worldID = ByteBufUtils.readUTF8String(buf);
-        }
-        catch (Throwable t)
-        {
+    public void fromBytes(ByteBuf buf) {
+        try {
+
+            int length = buf.readShort();
+            byte[] buffer = new byte[length];
+            buf.readBytes(buffer);
+
+            worldID = new String(buffer, StandardCharsets.UTF_8);
+
+        } catch (Throwable t) {
             Journeymap.getLogger().error(String.format("Failed to read message: %s", t));
         }
     }
 
     @Override
-    public void toBytes(ByteBuf buf)
-    {
-        try
-        {
-            if (worldID != null)
-            {
+    public void toBytes(ByteBuf buf) {
+        try {
+            if (worldID != null) {
                 ByteBufUtils.writeUTF8String(buf, worldID);
             }
-        }
-        catch (Throwable t)
-        {
+        } catch (Throwable t) {
             Journeymap.getLogger().error("[toBytes]Failed to read message: " + t);
         }
     }
 
-    public static class WorldIdListener implements IMessageHandler<WorldIDPacket, IMessage>
-    {
+    public static class WorldIdListener implements IMessageHandler<WorldIDPacket, IMessage> {
         @Override
-        public IMessage onMessage(WorldIDPacket message, MessageContext ctx)
-        {
-
-            EntityPlayerMP player = null;
-            if (ctx.side == Side.SERVER)
-            {
+        public IMessage onMessage(WorldIDPacket message, MessageContext ctx) {
+            EntityPlayerMP player;
+            if (ctx.side == Side.SERVER) {
                 player = ctx.getServerHandler().playerEntity;
-                if (ConfigHandler.getConfigByWorldName(player.getEntityWorld().getWorldInfo().getWorldName()).isUsingWorldID())
-                {
+                if (ConfigHandler.getConfigByWorldName(player.getEntityWorld().getWorldInfo().getWorldName()).isUsingWorldID()) {
                     Journeymap.proxy.handleWorldIdMessage(message.getWorldID(), player);
                 }
             }
